@@ -137,31 +137,31 @@ class Message(models.Model):
 
 # 🔌 STUN Server API Endpoints
 
-## Peer Management
+## 🧑‍💻 Peer Management
 
-  Endpoint      Method   Description
-  ------------- -------- -------------------------------
-  `/register`   POST     Register or update peer
-  `/peers`      GET      Retrieve all users
-  `/peerinfo`   GET      Retrieve peer connection info
+| Endpoint    | Method | Description |
+|------------|----------|-------------|
+| `/register` | POST | Register or update peer |
+| `/peers` | GET | Retrieve all users |
+| `/peerinfo` | GET | Retrieve peer connection info |
 
-------------------------------------------------------------------------
+---
 
-## Friendship Management
+## 🤝 Friendship Management
 
-  Endpoint           Method
-  ------------------ ----------------------
-  `/friend/start/`   Create friendship
-  `/friend/get/`     Retrieve friend list
+| Endpoint | Method | Description |
+|-----------|----------|-------------|
+| `/friend/start/` | POST | Create friendship between peers |
+| `/friend/get/` | GET | Retrieve friend list |
 
-------------------------------------------------------------------------
+---
 
-## Message Management
+## 💬 Message Management
 
-  Endpoint             Method
-  -------------------- -----------------------
-  `/message/create/`   Save message
-  `/message/get/`      Retrieve chat history
+| Endpoint | Method | Description |
+|------------|----------|-------------|
+| `/message/create/` | POST | Save message |
+| `/message/get/` | GET | Retrieve chat history |
 
 ------------------------------------------------------------------------
 
