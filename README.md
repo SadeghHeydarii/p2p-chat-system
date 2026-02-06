@@ -1,136 +1,424 @@
 # 📡 P2P Messaging System with STUN Server
 
-این پروژه یک سیستم پیام‌رسان **همتا به همتا (Peer-to-Peer)** است که با استفاده از یک **STUN-like Server مرکزی** برای کشف همتاها و مدیریت اطلاعات شبکه پیاده‌سازی شده است.  
-پروژه شامل سه بخش اصلی است:
+This project implements a **Peer-to-Peer (P2P) messaging system** that
+allows users to communicate directly through TCP sockets while using a
+centralized **STUN-like server** for peer discovery, friendship
+management, and message persistence.
 
-1. **STUN Server (Django + SQLite)**
-2. **Peer Application (Python CLI)**
-3. **Dockerized STUN Server**
+The system demonstrates hybrid networking architecture combining
+**Client-Server** and **Peer-to-Peer** communication models.
 
----
+------------------------------------------------------------------------
 
-## 🧱 معماری کلی پروژه
+# 🎯 Project Objectives
 
-```
-NET_Project/
-│
-├── stun server/        # STUN Server (Django Backend)
-│
-└── peer/               # Peer Application (Python CLI)
-```
+The main goals of this project are:
 
-- ارتباط **Peer ↔ Peer** از طریق **TCP Socket مستقیم**
-- ارتباط **Peer ↔ STUN Server** از طریق **HTTP API**
-- STUN Server فقط نقش **Directory + Message Storage** را دارد
+-   Implement real-time P2P communication using TCP sockets
+-   Design a centralized STUN-like server for peer discovery
+-   Maintain chat history using database storage
+-   Provide a CLI-based interactive messaging experience
+-   Demonstrate containerized backend deployment using Docker
 
----
+------------------------------------------------------------------------
 
-## 🟢 بخش اول: STUN Server
+# 🧱 System Architecture
 
-### 🔧 تکنولوژی‌ها
-- Python
-- Django
-- SQLite
+    NET_Project/
+    │
+    ├── stun server/        → Django Backend (STUN Server)
+    │
+    └── peer/               → P2P Client Application
 
-### 📂 ساختار پوشه
-```
-stun server/
-├── conf/
-├── server/
-├── db.sqlite3
-└── manage.py
-```
+------------------------------------------------------------------------
 
----
+## Communication Model
 
-## 🗄️ ساختار دیتابیس
+### 🔹 Peer ↔ Peer
 
-### Peer
-```python
+-   Direct TCP socket communication
+-   Used for real-time messaging
+-   Reduces server load
+-   Enables low-latency communication
+
+### 🔹 Peer ↔ STUN Server
+
+-   HTTP REST API communication
+-   Used for:
+    -   Peer discovery
+    -   Friendship management
+    -   Message storage and retrieval
+
+------------------------------------------------------------------------
+
+# 🟢 Phase 1 --- STUN Server (Django Backend)
+
+The STUN server acts as a centralized directory service.\
+It does **NOT relay messages** between peers.
+
+------------------------------------------------------------------------
+
+## 🔧 Technologies Used
+
+-   Python
+-   Django
+-   SQLite Database
+-   REST-style APIs
+
+------------------------------------------------------------------------
+
+## 📂 Backend Project Structure
+
+    stun server/
+    ├── conf/              → Django project configuration
+    ├── server/            → Main application
+    ├── db.sqlite3         → Database
+    └── manage.py          → Django management tool
+
+------------------------------------------------------------------------
+
+# 🗄️ Database Design
+
+## Peer Model
+
+Stores network identity of each user.
+
+``` python
 class Peer(models.Model):
-    username = models.CharField(unique=True)
+    username = models.CharField(max_length=50, unique=True)
     ip = models.GenericIPAddressField()
     port = models.PositiveIntegerField()
     last_seen = models.DateTimeField(auto_now=True)
 ```
 
-### Friendship
-```python
+### Purpose
+
+-   Identifies each user in network
+-   Stores connection information
+-   Tracks last activity
+
+------------------------------------------------------------------------
+
+## Friendship Model
+
+Stores social connections between peers.
+
+``` python
 class Friendship(models.Model):
-    owner = ForeignKey(Peer)
-    friend_username = CharField()
+    owner = models.ForeignKey(Peer)
+    friend_username = models.CharField(max_length=50)
 ```
 
-### Message
-```python
+### Purpose
+
+-   Maintains friend list
+-   Enables chat relationship tracking
+
+------------------------------------------------------------------------
+
+## Message Model
+
+Stores chat history between peers.
+
+``` python
 class Message(models.Model):
-    sender = ForeignKey(Peer)
-    receiver = ForeignKey(Peer)
-    content = TextField()
-    timestamp = DateTimeField(auto_now_add=True)
+    sender = models.ForeignKey(Peer)
+    receiver = models.ForeignKey(Peer)
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
 ```
 
----
+### Purpose
 
-## 🔌 API Endpoints
+-   Maintains conversation history
+-   Allows offline message retrieval
 
-| Endpoint | Method | توضیح |
-|--------|-------|------|
-| `/register` | POST | ثبت Peer |
-| `/peers` | GET | لیست کاربران |
-| `/peerinfo` | GET | اطلاعات Peer |
-| `/friend/start/` | POST | شروع دوستی |
-| `/friend/get/` | GET | لیست دوستان |
-| `/message/create/` | POST | ذخیره پیام |
-| `/message/get/` | GET | دریافت پیام‌ها |
+------------------------------------------------------------------------
 
----
+# 🔌 STUN Server API Endpoints
 
-## 💬 بخش دوم: Peer Application
+## Peer Management
 
-### فایل‌ها
+  Endpoint      Method   Description
+  ------------- -------- -------------------------------
+  `/register`   POST     Register or update peer
+  `/peers`      GET      Retrieve all users
+  `/peerinfo`   GET      Retrieve peer connection info
+
+------------------------------------------------------------------------
+
+## Friendship Management
+
+  Endpoint           Method
+  ------------------ ----------------------
+  `/friend/start/`   Create friendship
+  `/friend/get/`     Retrieve friend list
+
+------------------------------------------------------------------------
+
+## Message Management
+
+  Endpoint             Method
+  -------------------- -----------------------
+  `/message/create/`   Save message
+  `/message/get/`      Retrieve chat history
+
+------------------------------------------------------------------------
+
+# 💬 Phase 2 --- Peer Application (Client Side)
+
+This is the main messaging application responsible for direct peer
+communication.
+
+------------------------------------------------------------------------
+
+## 🔧 Technologies Used
+
+-   Python
+-   TCP Socket Programming
+-   Multithreading
+-   Requests Library
+-   CLI Interface
+
+------------------------------------------------------------------------
+
+## 📂 Client Project Structure
+
+    peer/
+    ├── main.py          → Main CLI controller
+    ├── com_server.py    → STUN Server communication
+    └── utils.py         → Helper utilities
+
+------------------------------------------------------------------------
+
+# ⚙️ File Responsibilities
+
+------------------------------------------------------------------------
+
+## main.py
+
+### Core Responsibilities
+
+-   CLI command management
+-   TCP server for receiving messages
+-   TCP client for sending messages
+-   Chat session management
+-   Message box handling
+
+------------------------------------------------------------------------
+
+### Important Functions
+
+#### start_server()
+
+-   Opens local socket server
+-   Accepts incoming peer connections
+-   Starts message receiving threads
+
+#### handle_peer()
+
+-   Handles incoming messages
+-   Updates message box
+-   Detects disconnection events
+
+#### start_client()
+
+-   Connects to remote peer
+-   Sends messages
+-   Stores messages in database
+
+------------------------------------------------------------------------
+
+## com_server.py
+
+Handles communication with STUN server using HTTP requests.
+
+### Functions
+
+-   register()
+-   get_peers()
+-   get_peer_info()
+-   friendship()
+-   save_message()
+-   fetch_messages()
+
+------------------------------------------------------------------------
+
+## utils.py
+
+Provides helper logic:
+
+-   Message box creation
+-   Chat history printing
+-   UI formatting
+
+------------------------------------------------------------------------
+
+# 💬 Message Box System
+
+Each user maintains:
+
+-   Message history per friend
+-   Notification flags for new messages
+-   Active chat session tracking
+
+------------------------------------------------------------------------
+
+# 🖥️ CLI Usage Guide
+
+After running the client:
+
+    python main.py
+
+------------------------------------------------------------------------
+
+## Available Commands
+
+### register
+
+Registers a new peer in the STUN server.
+
+User provides: - Username - Listening port
+
+------------------------------------------------------------------------
+
+### login
+
+Authenticates peer and starts local socket server.
+
+Loads: - Friend list - Message history
+
+------------------------------------------------------------------------
+
+### connect
+
+Establishes TCP connection to a peer and starts messaging.
+
+------------------------------------------------------------------------
+
+### show chat
+
+Displays conversation history and activates live chat mode.
+
+------------------------------------------------------------------------
+
+### end chat
+
+Stops live chat session.
+
+------------------------------------------------------------------------
+
+### status
+
+Displays friend list and indicates new message notifications.
+
+------------------------------------------------------------------------
+
+### logout
+
+Stops server and logs user out.
+
+------------------------------------------------------------------------
+
+### exit
+
+Completely exits application.
+
+------------------------------------------------------------------------
+
+# 🔄 Messaging Workflow
+
+1.  User connects to peer via STUN discovery
+2.  TCP connection established
+3.  Messages sent directly
+4.  Messages saved to database
+5.  Chat history retrieved when needed
+
+------------------------------------------------------------------------
+
+# 🐳 Phase 3 --- Dockerized Backend
+
+The STUN server can be containerized for deployment in local networks.
+
+------------------------------------------------------------------------
+
+## Dockerfile Overview
+
+``` dockerfile
+FROM python:3.12-slim
+
+WORKDIR /app
+COPY . .
+RUN pip install django
+
+EXPOSE 8000
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 ```
-peer/
-├── main.py
-├── com_server.py
-└── utils.py
-```
 
-### ویژگی‌ها
-- ارتباط مستقیم TCP
-- ذخیره پیام‌ها
-- message box
-- error handling کامل
-- CLI تعاملی
+------------------------------------------------------------------------
 
----
+## Build Docker Image
 
-## 🐳 Docker
+    docker build -t stun-server .
 
-### Build
-```bash
-docker build -t stun-server .
-```
+------------------------------------------------------------------------
 
-### Run
-```bash
-docker run -p 8000:8000 stun-server
-```
+## Run Container
 
----
+    docker run -p 8000:8000 stun-server
 
-## 🚀 اجرا
+------------------------------------------------------------------------
 
-### STUN Server
-```bash
-python manage.py runserver
-```
+# 🚀 Running the Full System
 
-### Peer
-```bash
-python main.py
-```
+## Step 1 --- Start STUN Server
 
----
+    cd stun server
+    python manage.py runserver
 
-✍️ Computer Networks Course Project
+OR using Docker
+
+------------------------------------------------------------------------
+
+## Step 2 --- Start Peer Client
+
+    cd peer
+    python main.py
+
+------------------------------------------------------------------------
+
+# 🧪 Error Handling Features
+
+The client handles:
+
+-   Peer disconnections
+-   Offline peers
+-   Network errors
+-   Invalid inputs
+-   Socket failures
+
+All errors are displayed via CLI without crashing the application.
+
+------------------------------------------------------------------------
+
+# 📚 Educational Concepts Demonstrated
+
+-   Socket Programming
+-   Peer-to-Peer Networking
+-   Client-Server Hybrid Architecture
+-   REST API Design
+-   Multithreading
+-   Database Persistence
+-   Containerized Deployment
+
+------------------------------------------------------------------------
+
+# 📌 Project Summary
+
+This project demonstrates a scalable and modular P2P messaging
+architecture combining real-time communication with centralized service
+coordination.
+
+------------------------------------------------------------------------
+
+✍️ Developed as a Computer Networks Course Project
