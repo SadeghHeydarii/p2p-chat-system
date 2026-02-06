@@ -97,7 +97,6 @@ class Peer(models.Model):
 -   Stores connection information
 -   Tracks last activity
 
-------------------------------------------------------------------------
 
 ## Friendship Model
 
@@ -114,7 +113,6 @@ class Friendship(models.Model):
 -   Maintains friend list
 -   Enables chat relationship tracking
 
-------------------------------------------------------------------------
 
 ## Message Model
 
@@ -145,7 +143,6 @@ class Message(models.Model):
 | `/peers` | GET | Retrieve all users |
 | `/peerinfo` | GET | Retrieve peer connection info |
 
----
 
 ## 🤝 Friendship Management
 
@@ -154,7 +151,6 @@ class Message(models.Model):
 | `/friend/start/` | POST | Create friendship between peers |
 | `/friend/get/` | GET | Retrieve friend list |
 
----
 
 ## 💬 Message Management
 
@@ -205,7 +201,6 @@ communication.
 -   Chat session management
 -   Message box handling
 
-------------------------------------------------------------------------
 
 ### Important Functions
 
@@ -280,7 +275,6 @@ Registers a new peer in the STUN server.
 
 User provides: - Username - Listening port
 
-------------------------------------------------------------------------
 
 ### login
 
@@ -288,37 +282,31 @@ Authenticates peer and starts local socket server.
 
 Loads: - Friend list - Message history
 
-------------------------------------------------------------------------
 
 ### connect
 
 Establishes TCP connection to a peer and starts messaging.
 
-------------------------------------------------------------------------
 
 ### show chat
 
 Displays conversation history and activates live chat mode.
 
-------------------------------------------------------------------------
 
 ### end chat
 
 Stops live chat session.
 
-------------------------------------------------------------------------
 
 ### status
 
 Displays friend list and indicates new message notifications.
 
-------------------------------------------------------------------------
 
 ### logout
 
 Stops server and logs user out.
 
-------------------------------------------------------------------------
 
 ### exit
 
